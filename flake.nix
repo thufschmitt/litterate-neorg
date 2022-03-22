@@ -1,43 +1,19 @@
 {
-  description = "A very basic flake";
-  inputs.haskellNix.url = "github:input-output-hk/haskell.nix";
-  inputs.nixpkgs.follows = "haskellNix/nixpkgs-unstable";
+  description = "A basic flake with a shell";
   inputs.flake-utils.url = "github:numtide/flake-utils";
 
-  nixConfig = {
-    extra-trusted-public-keys = ["hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ="];
-    extra-substituters = [ "https://hydra.iohk.io" ];
-  };
-
-  outputs = { self, nixpkgs, flake-utils, haskellNix }:
-    flake-utils.lib.eachSystem [ "x86_64-linux" "x86_64-darwin" ] (system:
-    let
-      overlays = [ haskellNix.overlay
-        (final: prev: {
-          # This overlay adds our project to pkgs
-          helloProject =
-            final.haskell-nix.project' {
-              src = ./.;
-              compiler-nix-name = "ghc8107";
-              # This is used by `nix develop .` to open a shell for use with
-              # `cabal`, `hlint` and `haskell-language-server`
-              shell.tools = {
-                cabal = {};
-                hlint = {};
-                haskell-language-server = {};
-              };
-              # Non-Haskell shell tools go here
-              shell.buildInputs = with pkgs; [
-                nixpkgs-fmt
-              ];
-            };
-        })
-      ];
-      pkgs = import nixpkgs { inherit system overlays; inherit (haskellNix) config; };
-      flake = pkgs.helloProject.flake {
+  outputs = { self, nixpkgs, flake-utils }:
+    flake-utils.lib.eachDefaultSystem (system: let
+      pkgs = nixpkgs.legacyPackages.${system};
+      myHaskellPackages = pkgs.haskell.packages.ghc8107.override {
+        overrides = self: super: {
+          neorg = self.callPackage ./neorg-haskell-parser.nix {};
+          litterate-neorg = self.callPackage ./litterate-neorg.nix { };
+        };
       };
-    in flake // {
-      # Built by `nix build .`
-      defaultPackage = flake.packages."hello:exe:hello";
+    in {
+      packages = myHaskellPackages;
+      devShell = self.defaultPackage.${system}.env;
+      defaultPackage = self.packages.${system}.litterate-neorg;
     });
 }
