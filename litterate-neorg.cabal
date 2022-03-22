@@ -32,6 +32,8 @@ executable litterate-neorg
     build-depends:
         base ^>=4.14.3.0,
         text,
-        neorg
+        neorg,
+        cleff,
+        optics-core
     hs-source-dirs:   app
     default-language: Haskell2010
