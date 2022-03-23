@@ -13,7 +13,9 @@
       };
     in {
       packages = myHaskellPackages;
-      devShell = self.defaultPackage.${system}.env;
+      devShell = self.defaultPackage.${system}.env.overrideAttrs (a: {
+        nativeBuildInputs = a.nativeBuildInputs or [] ++ [ pkgs.cabal-install ];
+      });
       defaultPackage = self.packages.${system}.litterate-neorg;
     });
 }
