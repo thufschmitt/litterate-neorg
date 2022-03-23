@@ -1,5 +1,5 @@
 {
-  description = "A basic flake with a shell";
+  description = "Litterate programming with neorg";
   inputs.flake-utils.url = "github:numtide/flake-utils";
 
   outputs = { self, nixpkgs, flake-utils }:
